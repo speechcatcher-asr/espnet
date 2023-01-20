@@ -24,7 +24,9 @@ speed_perturb_factors="" #"0.9 1.0 1.1"
 ./asr.sh                                               \
     --use_streaming true                                \
     --lang de                                          \
+    --ngpu 1                                          \
     --feats_type raw                                   \
+    --max_wav_duration 60                              \
     --audio_format flac                                 \
     --token_type bpe                                  \
     --nbpe 1000                                        \
