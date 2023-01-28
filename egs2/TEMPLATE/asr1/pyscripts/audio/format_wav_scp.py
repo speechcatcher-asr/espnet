@@ -17,6 +17,22 @@ from espnet2.fileio.read_text import read_2column_text
 from espnet2.fileio.sound_scp import SoundScpWriter
 from espnet.utils.cli_utils import get_commandline_args
 
+import os
+import ffmpeg
+
+def soundfile_write_workaround(owavpath, wave, samplerate):
+    if audio_format == 'flac':
+        #workaround for buggy soundfile flac output
+        basepath = os.path.splitext(owavpath)[0]
+
+        wav_filename = basepath + ".wav"
+        flac_filename = basepath + ".flac"
+
+        soundfile.write(wav_filename, wave, samplerate=rate)
+        ffmpeg.input(wav_filename).output(flac_filename, acodec='flac').run(overwrite_output=True)
+        os.remove(wav_filename)
+    else:
+        soundfile.write(owavpath, wave, samplerate=rate)
 
 def humanfriendly_or_none(value: str):
     if value in ("none", "None", "NONE"):
@@ -180,7 +196,7 @@ def main():
                             )
                         else:
                             owavpath = str(wavdir / f"{uttid}.{args.audio_format}")
-                            soundfile.write(owavpath, wave, rate)
+                            soundfile_write_workaround(owavpath, wave, rate)
                             fout.write(f"{uttid} {owavpath}\n")
                 else:
                     wave, rate = soundfile.read(wavpath, dtype=np.int16)
@@ -234,7 +250,7 @@ def main():
                             )
                         else:
                             owavpath = str(wavdir / f"{uttid}.{args.audio_format}")
-                            soundfile.write(owavpath, wave, rate)
+                            soundfile_write_workaround(owavpath, wave, rate)
                             fout.write(f"{uttid} {owavpath}\n")
                 fnum_samples.write(f"{uttid} {len(wave)}\n")
 
