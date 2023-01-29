@@ -8,6 +8,22 @@ from typeguard import check_argument_types
 
 from espnet2.fileio.read_text import read_2column_text
 
+import os
+import ffmpeg
+
+def soundfile_write_workaround(owavpath, wave, samplerate):
+    basepath, audio_format = os.path.splitext(owavpath)
+    if audio_format == 'flac':
+        #workaround for buggy soundfile flac output
+
+        wav_filename = basepath + ".wav"
+        flac_filename = basepath + ".flac"
+
+        soundfile.write(wav_filename, wave, samplerate=rate)
+        ffmpeg.input(wav_filename).output(flac_filename, acodec='flac').run(overwrite_output=True)
+        os.remove(wav_filename)
+    else:
+        soundfile.write(owavpath, wave, samplerate=rate)
 
 class SoundScpReader(collections.abc.Mapping):
     """Reader class for 'wav.scp'.
@@ -66,6 +82,7 @@ class SoundScpReader(collections.abc.Mapping):
         return self.data.keys()
 
 
+
 class SoundScpWriter:
     """Writer class for 'wav.scp'
 
@@ -111,7 +128,7 @@ class SoundScpWriter:
 
         wav = self.dir / f"{key}.{self.format}"
         wav.parent.mkdir(parents=True, exist_ok=True)
-        soundfile.write(str(wav), signal, rate)
+        soundfile_write_workaround(str(wav), signal, rate)
 
         self.fscp.write(f"{key} {wav}\n")
 
