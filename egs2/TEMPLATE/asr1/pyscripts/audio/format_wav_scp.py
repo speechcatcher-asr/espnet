@@ -21,9 +21,9 @@ import os
 import ffmpeg
 
 def soundfile_write_workaround(owavpath, wave, samplerate):
-    if audio_format == 'flac':
+    basepath, audio_format_ext = os.path.splitext(owavpath)
+    if audio_format_ext == '.flac':
         #workaround for buggy soundfile flac output
-        basepath = os.path.splitext(owavpath)[0]
 
         wav_filename = basepath + ".wav"
         flac_filename = basepath + ".flac"
