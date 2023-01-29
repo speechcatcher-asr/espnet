@@ -12,18 +12,18 @@ import os
 import ffmpeg
 
 def soundfile_write_workaround(owavpath, wave, samplerate):
-    basepath, audio_format = os.path.splitext(owavpath)
-    if audio_format == 'flac':
+    basepath, audio_format_ext = os.path.splitext(owavpath)
+    if audio_format_ext == '.flac':
         #workaround for buggy soundfile flac output
 
         wav_filename = basepath + ".wav"
         flac_filename = basepath + ".flac"
 
-        soundfile.write(wav_filename, wave, samplerate=rate)
+        soundfile.write(wav_filename, wave, samplerate=samplerate)
         ffmpeg.input(wav_filename).output(flac_filename, acodec='flac').run(overwrite_output=True)
         os.remove(wav_filename)
     else:
-        soundfile.write(owavpath, wave, samplerate=rate)
+        soundfile.write(owavpath, wave, samplerate=samplerate)
 
 class SoundScpReader(collections.abc.Mapping):
     """Reader class for 'wav.scp'.
