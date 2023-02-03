@@ -1,7 +1,9 @@
 DIR="data/dev"
 utils/utt2spk_to_spk2utt.pl $DIR/utt2spk > $DIR/spk2utt
 
-FILES=("text" "utt2spk" "spk2utt" "segments" "wav.scp", "utt2dur")
+mv $DIR/utt2dur $DIR/utt2dur.my
+
+FILES=("text" "utt2spk" "spk2utt" "segments" "wav.scp")
 for file in "${FILES[@]}"
 do
   sort -k1 "$DIR/$file" > "$DIR/${file}.sorted"
