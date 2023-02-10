@@ -1857,12 +1857,25 @@ class AbsTask(ABC):
             raise RuntimeError(
                 f"model must inherit {AbsESPnetModel.__name__}, but got {type(model)}"
             )
-        model.to(device)
+
+        if device == "mps":
+            model.float().to(device)
+        else:
+            model.to(device)
+
         if model_file is not None:
             if device == "cuda":
                 # NOTE(kamo): "cuda" for torch.load always indicates cuda:0
                 #   in PyTorch<=1.4
                 device = f"cuda:{torch.cuda.current_device()}"
-            model.load_state_dict(torch.load(model_file, map_location=device))
+
+            if device == "mps":
+                ckpt = torch.load(model_file, map_location='cpu')
+                print(ckpt.keys())
+                for elem in ckpt:
+                    ckpt[elem].float().to(device)
+                model.load_state_dict(ckpt)
+            else:
+                model.load_state_dict(torch.load(model_file, map_location=device))
 
         return model, args
