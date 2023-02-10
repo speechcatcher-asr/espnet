@@ -41,6 +41,10 @@ class BatchBeamSearch(BeamSearch):
         )
 
     def _batch_select(self, hyps: BatchHypothesis, ids: List[int]) -> BatchHypothesis:
+        #quickfix for mps/cpu mismatch
+        if ids.is_mps:
+            ids = ids.to('cpu')
+
         return BatchHypothesis(
             yseq=hyps.yseq[ids],
             score=hyps.score[ids],
