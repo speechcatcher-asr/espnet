@@ -40,7 +40,10 @@ class CTCPrefixScoreTH(object):
         self.device = (
             torch.device("cuda:%d" % x.get_device())
             if x.is_cuda
-            else torch.device("cpu")
+            else
+                torch.device("mps")
+                if x.is_mps
+                else torch.device("cpu")
         )
         # Pad the rest of posteriors in the batch
         # TODO(takaaki-hori): need a better way without for-loops
