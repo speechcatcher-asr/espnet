@@ -491,7 +491,7 @@ class Trainer:
         no_forward_run = options.no_forward_run
         ngpu = options.ngpu
         use_wandb = options.use_wandb
-        create_graph_in_tensorboard = options.create_graph_in_tensorboard
+        create_graph_in_tensorboard = False #options.create_graph_in_tensorboard
         distributed = distributed_option.distributed
 
         if log_interval is None:

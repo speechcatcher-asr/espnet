@@ -1,4 +1,4 @@
-DIR="data/dev"
+DIR="data/train"
 utils/utt2spk_to_spk2utt.pl $DIR/utt2spk > $DIR/spk2utt
 
 mv $DIR/utt2dur $DIR/utt2dur.my

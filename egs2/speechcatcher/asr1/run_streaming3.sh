@@ -41,5 +41,7 @@ speed_perturb_factors="" #"0.9 1.0 1.1"
     --valid_set "${valid_set}"                         \
     --test_sets "${test_sets}"                         \
     --speed_perturb_factors "${speed_perturb_factors}" \
-    --lm_train_text "data/${train_set}/text" "$@" 
-#    --stage 10
+    --lm_train_text "data/${train_set}/text" "$@" \
+    --hf_repo speechcatcher/speechcatcher_german_espnet_streaming_transformer_13k_train_size_m_raw_de_bpe1024 \
+    --skip_upload_hf false \
+    --stage 16

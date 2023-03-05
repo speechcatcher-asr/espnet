@@ -9,7 +9,7 @@ train_set="train"
 valid_set="dev"
 test_sets="test"
 
-asr_config=conf/train_asr_transducer_streaming_conformer_size_l.yaml
+asr_config=conf/train_asr_streaming_conformer_size_l.yaml
 inference_config=conf/decode_asr_streaming.yaml
 bpe_train_text=dump/raw/train/text #data/train/text.raw
 lm_config=conf/train_lm.yaml
@@ -22,7 +22,6 @@ use_wordlm=false
 speed_perturb_factors="" #"0.9 1.0 1.1"
 
 ./asr.sh                                               \
-    --asr_task asr_transducer                          \	
     --use_streaming true                                \
     --lang de                                          \
     --ngpu 4                                          \
@@ -43,4 +42,4 @@ speed_perturb_factors="" #"0.9 1.0 1.1"
     --test_sets "${test_sets}"                         \
     --speed_perturb_factors "${speed_perturb_factors}" \
     --lm_train_text "data/${train_set}/text" "$@" \
-    --stage 10
+    --stage 11
