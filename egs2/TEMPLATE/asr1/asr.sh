@@ -53,6 +53,8 @@ speed_perturb_factors=  # perturbation factors, e.g. "0.9 1.0 1.1" (separated by
 # Feature extraction related
 feats_type=raw       # Feature type (raw, raw_copy, fbank_pitch, or extracted).
 audio_format=flac    # Audio format: wav, flac, wav.ark, flac.ark  (only in feats_type=raw).
+multi_columns_input_wav_scp=false  # Enable multi columns mode for input wav.scp for format_wav_scp.py
+multi_columns_output_wav_scp=false # Enable multi columns mode for output wav.scp for format_wav_scp.py
 fs=16k               # Sampling rate.
 min_wav_duration=0.1 # Minimum duration in second.
 max_wav_duration=20  # Maximum duration in second.
@@ -545,14 +547,13 @@ fi
 if "${skip_eval}"; then
     skip_stages+="12 13 "
 fi
-if [ -n "${download_model}" ]; then
-    skip_stages+="14 "
-fi
-if "${skip_upload}"; then
-    skip_stages+="14 15 "
-fi
-if "${skip_upload_hf}"; then
-    skip_stages+="14 16 "
+
+if "${skip_upload}" && "${skip_upload_hf}"; then
+    skip_stages+="14 15 16 "
+elif "${skip_upload}"; then
+    skip_stages+="15 "
+elif "${skip_upload_hf}"; then
+    skip_stages+="16 "
 fi
 skip_stages=$(echo "${skip_stages}" | tr ' ' '\n' | sort -nu | tr '\n' ' ')
 log "Skipped stages: ${skip_stages}"
@@ -644,9 +645,16 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ] && ! [[ " ${skip_stages} " =~ [
             # shellcheck disable=SC2086
             scripts/audio/format_wav_scp.sh --nj "${nj}" --cmd "${train_cmd}" \
                 --audio-format "${audio_format}" --fs "${fs}" ${_opts} \
+                --multi-columns-input "${multi_columns_input_wav_scp}" \
+                --multi-columns-output "${multi_columns_output_wav_scp}" \
                 "data/${dset}/wav.scp" "${data_feats}${_suf}/${dset}"
 
             echo "${feats_type}" > "${data_feats}${_suf}/${dset}/feats_type"
+            if "${multi_columns_output_wav_scp}"; then
+                echo "multi_${audio_format}" > "${data_feats}${_suf}/${dset}/audio_format"
+            else
+                echo "${audio_format}" > "${data_feats}${_suf}/${dset}/audio_format"
+            fi
         done
 
     elif [ "${feats_type}" = raw_copy ]; then
@@ -685,8 +693,13 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ] && ! [[ " ${skip_stages} " =~ [
                     [ -f data/${dset}/${ref_txt} ] && cp data/${dset}/${ref_txt} ${data_feats}${_suf}/${dset}
                 done
             fi
-            echo "raw" > "${data_feats}${_suf}/${dset}/feats_type"
 
+            echo "raw" > "${data_feats}${_suf}/${dset}/feats_type"
+            if "${multi_columns_input_wav_scp}"; then
+                echo "multi_${audio_format}" > "${data_feats}${_suf}/${dset}/audio_format"
+            else
+                echo "${audio_format}" > "${data_feats}${_suf}/${dset}/audio_format"
+            fi
         done
 
     elif [ "${feats_type}" = fbank_pitch ]; then
@@ -1176,9 +1189,10 @@ if [ ${stage} -le 10 ] && [ ${stop_stage} -ge 10 ] && ! [[ " ${skip_stages} " =~
     fi
 
     _feats_type="$(<${_asr_train_dir}/feats_type)"
+    _audio_format="$(cat ${_asr_train_dir}/audio_format 2>/dev/null || echo ${audio_format})"
     if [ "${_feats_type}" = raw ]; then
         _scp=wav.scp
-        if [[ "${audio_format}" == *ark* ]]; then
+        if [[ "${_audio_format}" == *ark* ]]; then
             _type=kaldi_ark
         else
             # "sound" supports "wav", "flac", etc.
@@ -1288,11 +1302,14 @@ if [ ${stage} -le 11 ] && [ ${stop_stage} -ge 11 ] && ! [[ " ${skip_stages} " =~
     fi
 
     _feats_type="$(<${_asr_train_dir}/feats_type)"
+    _audio_format="$(cat ${_asr_train_dir}/audio_format 2>/dev/null || echo ${audio_format})"
     if [ "${_feats_type}" = raw ]; then
         _scp=wav.scp
         # "sound" supports "wav", "flac", etc.
-        if [[ "${audio_format}" == *ark* ]]; then
+        if [[ "${_audio_format}" == *ark* ]]; then
             _type=kaldi_ark
+        elif [[ "${_audio_format}" == *multi* ]]; then
+            _type=multi_columns_sound
         else
             _type=sound
         fi
@@ -1501,10 +1518,13 @@ if [ ${stage} -le 12 ] && [ ${stop_stage} -ge 12 ] && ! [[ " ${skip_stages} " =~
         mkdir -p "${_logdir}"
 
         _feats_type="$(<${_data}/feats_type)"
+        _audio_format="$(cat ${_data}/audio_format 2>/dev/null || echo ${audio_format})"
         if [ "${_feats_type}" = raw ]; then
             _scp=wav.scp
             if [[ "${audio_format}" == *ark* ]]; then
                 _type=kaldi_ark
+            elif [[ "${_audio_format}" == *multi* ]]; then
+                _type=multi_columns_sound
             else
                 _type=sound
             fi
@@ -1654,7 +1674,7 @@ if [ ${stage} -le 13 ] && [ ${stop_stage} -ge 13 ] && ! [[ " ${skip_stages} " =~
                     done
                 done
                 # Generate the oracle permutation hyp.trn and ref.trn
-                scripts/utils/eval_perm_free_error.py --num-spkrs ${num_ref} \
+                pyscripts/utils/eval_perm_free_error.py --num-spkrs ${num_ref} \
                     --results-dir ${_scoredir}
             fi
 
