@@ -44,4 +44,4 @@ speed_perturb_factors="" #"0.9 1.0 1.1"
     --lm_train_text "data/${train_set}/text" "$@" \
     --hf_repo speechcatcher/speechcatcher_german_espnet_streaming_transformer_26k_train_size_s_raw_de_bpe1024 \
     --skip_upload_hf false \
-    --stage 11
+    --stage 14
