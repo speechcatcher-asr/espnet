@@ -9,7 +9,7 @@ train_set="train"
 valid_set="dev"
 test_sets="test"
 
-asr_config=conf/train_asr_streaming_conformer_size_l.yaml
+asr_config=conf/train_asr_streaming_transformer_size_xl.yaml
 inference_config=conf/decode_asr_streaming.yaml
 bpe_train_text=dump/raw/train/text #data/train/text.raw
 lm_config=conf/train_lm.yaml
@@ -42,6 +42,6 @@ speed_perturb_factors="" #"0.9 1.0 1.1"
     --test_sets "${test_sets}"                         \
     --speed_perturb_factors "${speed_perturb_factors}" \
     --lm_train_text "data/${train_set}/text" "$@" \
-    --hf_repo speechcatcher/speechcatcher_german_espnet_streaming_conformer_24k_train_size_l_raw_de_bpe1024 \
+    --hf_repo speechcatcher/speechcatcher_german_espnet_streaming_transformer_26k_train_size_xl_raw_de_bpe1024 \
     --skip_upload_hf false \
-    --stage 11
+    --stage 12
